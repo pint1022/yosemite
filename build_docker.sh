@@ -1,0 +1,1 @@
+sudo docker build -f ./Dockerfile -t pint1022/tf-jupyter-tdfs-pandas .
