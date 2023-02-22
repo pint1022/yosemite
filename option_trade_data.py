@@ -16,7 +16,7 @@ import pytz
 
 datadir = '/home/steven/dev/yosemite_jupyter/dataset'
 
-def export_chart(ticker='tsla', startdate=datetime.now(), period='1wk', interval='15m'):
+def export_chart(ticker='tsla', startdate=datetime.now(), period='30d', interval='15m'):
     startdate = startdate.astimezone(timezone('US/Pacific'))
     intervaldir =os.path.join(datadir, 'interval-'+period+'-'+interval)
     start = (startdate - timedelta(days=5)).strftime('%Y-%m-%d')
@@ -38,6 +38,7 @@ def export_chart(ticker='tsla', startdate=datetime.now(), period='1wk', interval
     vertical_spacing=0.05,
     subplot_titles=(ticker,),
     row_heights = [1000])
+    fig.layout.xaxis.type = 'category'
 
 #     data = yfinance.Ticker(ticker).history(period, interval=interval)
 
@@ -186,13 +187,12 @@ def parse():
                        'train and val paths can be specified directly by providing both paths as arguments)')
     parser.add_argument('--list', '-l', metavar='LIST', default='all',
                         help='list of stock groups: sp500, dow or all') 
-    parser.add_argument('--date', '-dt', type=mkdate,
-                        default=datetime.now(),
-                        help='list of stock groups: sp500, dow or all') 
+    parser.add_argument('--date', '-dt', metavar='DATE', type=mkdate, default=datetime.now(),
+                        help='which date is to retrieve') 
 # 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo                      
     parser.add_argument('--interval', '-n', metavar='Interval', default='15m',
                         help='the interval of stock data')                       
-    parser.add_argument('--option-period', '-p', default=24, type=int,
+    parser.add_argument('--option-period', '-p', default='24', type=int,
                         metavar='N', help='option period (default: 24)')
     args = parser.parse_args()
     return args

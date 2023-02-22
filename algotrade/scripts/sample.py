@@ -37,11 +37,34 @@ def get_option_data_by_strike(ticker, strike, expiration, label='lastPrice', fla
         options = tick.option_chain(expiration).puts
     current_price = tick.history(period='1d')['Close'][0]    
     return options[options['strike']==float(strike)][label].tolist()[0], current_price
-    # , options[options['strike']==strike]['strike']        
 
-def update():
-    wb = context.get_caller()
-    sheet = wb.Worksheets('Tickers')    
+def get_data(ticker, strike, expiration, label='lastPrice', flag='call'):
+    tick= yf.Ticker(ticker)
+    if (flag=='call'): # calls, date 'yyyy-m-d'
+        options = tick.option_chain(expiration).calls
+        current_price = options[options['strike']==float(strike)][label].tolist()[0]
+    elif (flag=='put'):
+        options = tick.option_chain(expiration).puts
+        current_price = options[options['strike']==float(strike)][label].tolist()[0]
+    else:
+        current_price = tick.history(period='1d')['Close'][0]    
+    return  current_price
+
+def update_all(sheet): 
+    currentRow = 2 # Start at row 2
+    # sheet.Range("G" + str(currentRow)).Value= sheet.Range("A" + str(currentRow)).Value
+    # sheet.Range("G" + str(currentRow)).Value= sheet.Range("C" + str(currentRow)).Value.format('YYYY-MM-DD')
+    while (sheet.Range("A" + str(currentRow)).Value != ""):
+        ticker = sheet.Range("A" + str(currentRow)).Value
+        strike = sheet.Range("B" + str(currentRow)).Value
+        expiration = sheet.Range("C" + str(currentRow)).Value
+        flag = sheet.Range("D" + str(currentRow)).Value
+        Label = "lastPrice"
+        res =  get_data(ticker=ticker, strike=strike, expiration=expiration, flag=flag)
+        sheet.Range("E" + str(currentRow)).Value = res
+        currentRow = currentRow + 1
+
+def update_holding(sheet): 
     currentRow = 2 # Start at row 2
     # sheet.Range("G" + str(currentRow)).Value= sheet.Range("A" + str(currentRow)).Value
     # sheet.Range("G" + str(currentRow)).Value= sheet.Range("C" + str(currentRow)).Value.format('YYYY-MM-DD')
@@ -57,20 +80,24 @@ def update():
         sheet.Range(PRICE_CELL).Value= current_price
         currentRow = currentRow + 1
 
-def update_1():
+def update_share(sheet):
+    # wb = context.get_caller()
+    # sheet = wb['share']    
+    currentRow = 2 # Start at row 2
+    sheet.Range("G" + str(currentRow)).Value  = 'here'
+    while (sheet.Range("A" + str(currentRow)).Value != ""):
+        ticker = sheet.Range("A" + str(currentRow)).Value
+        sheet.Range("G" + str(currentRow)).Value = ticker
+        tick= yf.Ticker(ticker)
+        res = tick.history(period='1d')['Close'][0]    
+        sheet.Range("C" + str(currentRow)).Value = res
+        currentRow = currentRow + 1
+
+
+def update():
     wb = context.get_caller()
-    sheet = wb['Tickers']    
-    current_price = tick.history(period='1d')['Close'][0]    
-    for row in sheet.iter_rows(min_row=2, max_col=7, values_only=True):
-        if not row[0]:
-            break
-        
-        # Read the value of the corresponding cell in Column B
-        ticker = sheet.cell(row=row, column=1).value
-        strick = sheet.cell(row=row, column=2).value 
-        expiration = sheet.cell(row=row, column=3).value
-        flag = sheet.cell(row=row, column=4).value
-        res =  get_option_data_by_strike(ticker=ticker, strike=strike, expiration=expiration, flag=flag)
-        sheet.cell(row=row, column=5).value = ticker
-
-
+    sheet = wb.Worksheets('Tickers')  
+    update_all(sheet)     
+    # update_holding(sheet=sheet)
+    # sheet = wb.Worksheets('share')       
+    # update_share(sheet=sheet)
